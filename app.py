@@ -31,7 +31,7 @@ def _render_side(
     default_physical_index = 1 if side == "2" else 0   # prod for File 2, preprod for File 1
     default_logical_index = 1 if side == "2" else 0   # prod for File 2, cert for File 1
     with st.container():
-        st.subheader(label)
+        st.markdown(f"<h4 style='margin-bottom: 0.25rem;'>{label}</h4>", unsafe_allow_html=True)
         deploy_url = st.text_input(
             "DeployConfig.yaml URL",
             key=f"deploy_url_{side}",
@@ -44,7 +44,7 @@ def _render_side(
             key=f"physical_{side}",
         )
         logical = st.selectbox(
-            "LogicalEnv",
+            "Logical Environment",
             options=LOGICAL_ENVS,
             index=default_logical_index,
             key=f"logical_{side}",
@@ -89,7 +89,10 @@ def _ensure_defaults_from_deploy_config(params: dict) -> dict:
 
 def main():
     st.set_page_config(page_title="Config Comparator", layout="wide")
-    st.title("Config Comparator")
+    st.markdown(
+        "<h2 style='margin-bottom: 0.25rem;'>Config Comparator</h2>",
+        unsafe_allow_html=True,
+    )
     st.caption("Semantic YAML diff: compare merged configs (left vs right)")
 
     col1, col2 = st.columns(2)
