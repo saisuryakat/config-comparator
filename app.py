@@ -2,6 +2,8 @@
 Config Comparator – Streamlit UI.
 Compare two merged configs (left vs right) with semantic YAML diff.
 """
+import difflib
+import yaml
 import streamlit as st
 from backend import (
     build_merged_config,
@@ -35,11 +37,6 @@ def _render_side(
             key=f"deploy_url_{side}",
             placeholder="https://raw.githubusercontent.com/.../DeployConfig.yaml",
         )
-        api_name = st.text_input(
-            "Api Name (optional)",
-            key=f"api_name_{side}",
-            placeholder="e.g. orders-api",
-        )
         physical = st.selectbox(
             "Physical Environment",
             options=PHYSICAL_ENVS,
@@ -52,11 +49,6 @@ def _render_side(
             index=default_logical_index,
             key=f"logical_{side}",
         )
-        api_file = st.text_input(
-            "Api Operations yaml file name (optional)",
-            key=f"api_file_{side}",
-            placeholder="e.g. orders-api-v1.yaml",
-        )
         branch = st.text_input(
             "Branch",
             value=default_branch,
@@ -67,6 +59,9 @@ def _render_side(
             key=f"opsrepo_{side}",
             placeholder="e.g. api-gb01, api-in01",
         )
+        # Optional overrides UI removed; always infer from DeployConfig instead.
+        api_name = None
+        api_file = None
     return {
         "deploy_url": deploy_url,
         "api_name": api_name,
@@ -181,6 +176,35 @@ def main():
     if err2:
         st.error(f"File 2 (right): {err2}")
         st.stop()
+
+    # Show the fully merged configs before computing the semantic diff
+    with st.expander("Deep merged configs (left & right)", expanded=False):
+        left_yaml = yaml.safe_dump(merged1, sort_keys=False)
+        right_yaml = yaml.safe_dump(merged2, sort_keys=False)
+
+        col_l, col_r = st.columns(2)
+        with col_l:
+            st.markdown("**Left merged config**")
+            st.code(left_yaml, language="yaml")
+        with col_r:
+            st.markdown("**Right merged config**")
+            st.code(right_yaml, language="yaml")
+
+        # Line-level YAML diff (similar to git unified diff)
+        diff_lines = list(
+            difflib.unified_diff(
+                left_yaml.splitlines(),
+                right_yaml.splitlines(),
+                fromfile="left.yaml",
+                tofile="right.yaml",
+                lineterm="",
+            )
+        )
+        st.markdown("**YAML diff (unified)**")
+        if diff_lines:
+            st.code("\n".join(diff_lines), language="diff")
+        else:
+            st.caption("No line-level differences in the merged YAML.")
 
     changed, only_left, only_right = semantic_diff(merged1, merged2)
 

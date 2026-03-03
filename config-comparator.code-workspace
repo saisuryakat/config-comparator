@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../config-repo"
+		},
+		{
+			"path": "../products-api"
+		},
+		{
+			"path": "../orders-api"
+		}
+	],
+	"settings": {}
+}
